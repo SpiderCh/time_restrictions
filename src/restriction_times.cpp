@@ -52,6 +52,28 @@ std::vector<restricted_time::restriction_time> restricted_time::get_restrictions
     return restrictions_;
 }
 
+bool restricted_time::is_now_restricted() const
+{
+    return is_time_restricted(std::time(nullptr));
+}
+
+bool restricted_time::is_time_restricted(std::time_t time) const
+{
+    if (restrictions_.empty())
+        return false;
+
+    std::tm ct{};
+    localtime_r(&time, &ct);
+    int current_time_point = ct.tm_sec + ct.tm_min * max_seconds_in_minute;
+    for (auto && restriction : restrictions_)
+    {
+        current_time_point += ct.tm_hour * max_seconds_in_hour * restriction.with_hours;
+        if (is_time_point_restricted(restriction, current_time_point))
+            return true;
+    }
+    return false;
+}
+
 bool restricted_time::is_time_point_restricted(const restriction_time & rest, int tp)
 {
     if (rest.to > rest.from)

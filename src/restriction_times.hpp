@@ -29,6 +29,9 @@ public:
     restricted_time(const std::string & times);
 
     std::vector<restriction_time> get_restrictions() const;
+
+    bool is_now_restricted() const;
+    bool is_time_restricted(std::time_t time) const;
 private:
     static bool is_time_point_restricted(const restriction_time & rest, int tp);
 
