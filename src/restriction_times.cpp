@@ -1,9 +1,10 @@
 #include "restriction_times.hpp"
 
+#include <charconv>
 #include <ctime>
-#include <cstring>
 
 #include <array>
+#include <numeric>
 
 namespace
 {
@@ -13,37 +14,49 @@ constexpr int max_seconds_in_day = max_seconds_in_hour * 24;
 
 constexpr std::array<char, 4> delimiters {':', ':', '-', ','};
 constexpr std::array<int, 3> convert_to_seconds {max_seconds_in_hour, max_seconds_in_minute, 1};
+
+int number(std::string_view s)
+{
+    int num = 0;
+    std::from_chars(s.begin(), s.end(), num);
+    return num;
+}
+
 }
 
 restricted_time::restricted_time(const std::string & times)
 {
-    char num[128] {};
-    for (size_t i = 0; i < times.size();)
+    for (size_t i = 0; i + 8 <= times.size(); ++i)
     {
         restriction_time r{};
-        if (!isdigit(times[i]))
+        if (!std::isdigit(times[i]))
             r.with_hours = 0;
 
-        for (size_t j = 0; j < delimiters.size() - 1; ++j, i += 3)
-        {
-            strncpy(num, times.c_str() + i, 2);
-            r.from += atoi(num) * convert_to_seconds[j];
-        }
+        const std::array<const char *, 3> nums {times.data() + i, times.data() + i + 3, times.data() + i + 6};
+        r.from = std::inner_product(nums.begin(), nums.end(), convert_to_seconds.begin(), 0, std::plus<>(), [](const char * n, int value){
+            return value * number({n, 2});
+        });
 
-        const size_t begin = i;
+        int duration = 0;
+        size_t begin = times.find(delimiters[2], i);
         i = times.find(delimiters[3], i);
+
         if (i == std::string::npos)
             i = times.size();
 
-        strncpy(num, times.c_str() + begin, i - begin);
-        r.to = r.from + atoi(num);
+        if (begin != std::string::npos)
+        {
+            ++begin;
+            duration = number({times.c_str() + begin, i - begin});
+        }
+
+        r.to = r.from + duration;
 
         const int max_seconds = r.with_hours ? max_seconds_in_day : max_seconds_in_hour;
         if (r.to > max_seconds)
             r.to -= max_seconds;
 
         restrictions_.emplace_back(r);
-        ++i;
     }
 }
 

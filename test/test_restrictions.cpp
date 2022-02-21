@@ -23,12 +23,34 @@ std::time_t generate_time_t(int hours, int minutes, int seconds)
 }
 }
 
-TEST(restriction_tests, parse_simple_time)
+TEST(restriction_tests, parse_invalid_time)
 {
-    const std::string example("10:00:00-10");
+    const std::string example("10:00:0");
     const restricted_time r(example);
 
-    const restricted_time::restriction_time expected_value { 1, 36000, 36010 };
+    const std::vector<restricted_time::restriction_time> expected;
+
+    EXPECT_EQ(r.get_restrictions(), expected);
+}
+
+TEST(restriction_tests, parse_invalid_duration)
+{
+    const std::string example("10:00:00,11:00:00");
+    const restricted_time r(example);
+
+    const restricted_time::restriction_time expected_value { 1, 36000, 36000 };
+    const restricted_time::restriction_time expected_value_2 { 1, 39600, 39600 };
+    const std::vector<restricted_time::restriction_time> expected { expected_value, expected_value_2};
+
+    EXPECT_EQ(r.get_restrictions(), expected);
+}
+
+TEST(restriction_tests, parse_simple_time)
+{
+    const std::string example("10:00:00-30");
+    const restricted_time r(example);
+
+    const restricted_time::restriction_time expected_value { 1, 36000, 36030 };
     const std::vector<restricted_time::restriction_time> expected { expected_value };
 
     EXPECT_EQ(r.get_restrictions(), expected);
