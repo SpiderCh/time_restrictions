@@ -101,7 +101,7 @@ TEST(restriction_tests, check_restrictions_simple)
 
 TEST(restriction_tests, check_restrictions_overlaped)
 {
-    const std::string example("23:59:40-30");
+    const std::string example("23:59:00-20,23:59:40-30");
     const restricted_time r(example);
 
     EXPECT_TRUE(r.is_time_restricted(generate_time_t(23, 59, 40)));

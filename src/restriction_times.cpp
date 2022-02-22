@@ -77,14 +77,12 @@ bool restricted_time::is_time_restricted(std::time_t time) const
 
     std::tm ct{};
     localtime_r(&time, &ct);
-    int current_time_point = ct.tm_sec + ct.tm_min * max_seconds_in_minute;
-    for (auto && restriction : restrictions_)
+    const int current_time_point = ct.tm_sec + ct.tm_min * max_seconds_in_minute;
+    return std::any_of(restrictions_.cbegin(), restrictions_.cend(), [&ct, &current_time_point](const restriction_time & restriction)
     {
-        current_time_point += ct.tm_hour * max_seconds_in_hour * restriction.with_hours;
-        if (is_time_point_restricted(restriction, current_time_point))
-            return true;
-    }
-    return false;
+        const int time_point_with_hours = current_time_point + ct.tm_hour * max_seconds_in_hour * restriction.with_hours;
+        return is_time_point_restricted(restriction, time_point_with_hours);
+    });
 }
 
 bool restricted_time::is_time_point_restricted(const restriction_time & rest, int tp)
