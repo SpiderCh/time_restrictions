@@ -110,3 +110,46 @@ TEST(restriction_tests, check_restrictions_overlaped)
     EXPECT_FALSE(r.is_time_restricted(generate_time_t(23, 59, 39)));
     EXPECT_FALSE(r.is_time_restricted(generate_time_t(0, 0, 11)));
 }
+
+TEST(restriction_tests, restrict_every_second)
+{
+    const std::string example("XX:00:00-3600");
+    const restricted_time r(example);
+
+    for (int z = 0; z < 24; ++z)
+        for (int i = 0; i < 60; ++i)
+            for(int j = 0; j < 60; ++j)
+                EXPECT_TRUE(r.is_time_restricted(generate_time_t(z, i, j)));
+}
+
+TEST(restriction_tests, restriction_long_duration)
+{
+    const std::string example("XX:00:00-3601");
+    const restricted_time r(example);
+
+    for (int z = 0; z < 24; ++z)
+        for (int i = 0; i < 60; ++i)
+            for(int j = 0; j < 60; ++j)
+                EXPECT_TRUE(r.is_time_restricted(generate_time_t(z, i, j)));
+}
+
+TEST(restriction_tests, restriction_wait_overlapped)
+{
+    const std::string example("XX:59:30-60");
+    const restricted_time r(example);
+
+    for (int z = 0; z < 24; ++z)
+    {
+        for (int i = 0; i < 60; ++i)
+        {
+            for(int j = 0; j < 60; ++j)
+            {
+                if ((i == 59 && j >= 30)
+                 || (i == 0 && j <= 30))
+                    EXPECT_TRUE(r.is_time_restricted(generate_time_t(z, i, j)));
+                else
+                    EXPECT_FALSE(r.is_time_restricted(generate_time_t(z, i, j)));
+            }
+        }
+    }
+}

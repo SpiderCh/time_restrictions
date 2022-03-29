@@ -53,6 +53,13 @@ restricted_time::restricted_time(const std::string & times)
         r.to = r.from + duration;
 
         const int max_seconds = r.with_hours ? max_seconds_in_day : max_seconds_in_hour;
+
+        if (duration > max_seconds)
+        {
+            r.from = 0;
+            r.to = max_seconds;
+        }
+
         if (r.to > max_seconds)
             r.to -= max_seconds;
 
